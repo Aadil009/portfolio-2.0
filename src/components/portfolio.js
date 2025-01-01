@@ -34,7 +34,7 @@ const Portfolio = () => {
     name: "Aadil Sayyed",
     title: "Full Stack Developer",
     location: "Shirdi, India",
-    email: "aadil.sayyed@outlook.com",
+    email: "aadil_sayyed@outlook.com",
     website: "AadilSayyed.com",
     mob: "+91 85518 90913",
     github: 'http://www.github.com/Aadil009',
