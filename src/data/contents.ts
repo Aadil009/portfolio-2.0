@@ -31,6 +31,12 @@ export const projects = [
         img: "/images/portfolio.png"
     },
     {
+        title: "night pdf",
+        year: "2024",
+        links: "https://nightpdf-dot-dailysync-backend-service.et.r.appspot.com/",
+        img: "/images/night-pdf.png"
+    },
+    {
         title: "socioEscape",
         year: "2023",
         links: "#",

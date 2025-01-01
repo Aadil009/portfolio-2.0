@@ -114,7 +114,15 @@ const Portfolio = () => {
         description: "Application where user will see the PMPML (Pune Transportation) busses schedule, arrivals and search busses for indirect and direct routes in the application",
         type: 'app',
         link: ''
-    }
+    },
+    {
+      name: 'NightPDF',
+      tech: 'Next.js , Tailwind CSS',
+      image: '/images/night-pdf.png',
+      description: 'Read PDFs in dark mode. Comfortable reading in low-light condition',
+      type: 'web',
+      link: 'https://nightpdf-dot-dailysync-backend-service.et.r.appspot.com/',
+  },
   ];
 
   useEffect(() => {
