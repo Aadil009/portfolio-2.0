@@ -8,13 +8,11 @@ const Portfolio3 = () => {
   const [fontLoaded, setFontLoaded] = useState(false);
 
   useEffect(() => {
-    // Load Sour Gummy font
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Sour+Gummy:wght@400;700&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
-    // Check if font is loaded
     const checkFont = () => {
       if (document.fonts && document.fonts.check) {
         if (document.fonts.check('1em "Sour Gummy"')) {
@@ -23,21 +21,118 @@ const Portfolio3 = () => {
           setTimeout(checkFont, 100);
         }
       } else {
-        // Fallback for browsers without font loading API
         setTimeout(() => setFontLoaded(true), 1000);
       }
     };
 
     checkFont();
 
+    loadMediumBlogs();
+
     return () => {
-      // Cleanup
       const existingLink = document.querySelector('link[href*="Sour+Gummy"]');
       if (existingLink && existingLink.parentNode) {
         existingLink.parentNode.removeChild(existingLink);
       }
     };
   }, []);
+
+  const MEDIUM_HANDLE = "aadil_sayyed"; 
+  const RSS_URL = `https://medium.com/feed/@${MEDIUM_HANDLE}`;
+
+  const fetchRss2Json = async () => {
+    const endpoint = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`;
+    const res = await fetch(endpoint);
+    if (!res.ok) throw new Error(`rss2json HTTP ${res.status}`);
+    const json = await res.json();
+    console.log('Data:', json)
+    if (!json?.items) throw new Error("rss2json bad payload");
+    return json.items.map(i => ({
+      title: i.title,
+      link: i.link,
+      pubDate: i.pubDate,
+      thumbnail: i.thumbnail || ""
+    }));
+  };
+
+  const fetchAllOriginsXML = async () => {
+    const endpoint = `https://api.allorigins.win/get?url=${encodeURIComponent(RSS_URL)}`;
+    const res = await fetch(endpoint);
+    if (!res.ok) throw new Error(`allorigins HTTP ${res.status}`);
+    const { contents } = await res.json();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(contents, "text/xml");
+    const items = Array.from(xml.querySelectorAll("item")).slice(0, 6).map(item => {
+      const title = item.querySelector("title")?.textContent ?? "";
+      const link = item.querySelector("link")?.textContent ?? "";
+      const pubDate = item.querySelector("pubDate")?.textContent ?? "";
+      const contentTag = item.getElementsByTagName("content:encoded")[0];
+      const description = item.querySelector("description")?.textContent ?? "";
+      const html = contentTag?.textContent || description || "";
+      let thumb = "";
+      const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (m) thumb = m[1];
+      return { title, link, pubDate, thumbnail: thumb };
+    });
+    if (!items.length) throw new Error("XML parse yielded no items");
+    return items;
+  };
+
+  const renderPosts = (posts) => {
+    const blogGrid = document.getElementById("blog-grid");
+    if (!blogGrid) return;
+
+    blogGrid.innerHTML = "";
+    posts.slice(0, 6).forEach((p, idx) => {
+      const card = document.createElement("article");
+      card.className = "blog-card";
+
+      if (p.thumbnail) {
+        const img = document.createElement("img");
+        img.className = "thumb";
+        img.src = p.thumbnail;
+        img.alt = "Cover image";
+        card.appendChild(img);
+      }
+
+      const wrap = document.createElement("div");
+      const h3 = document.createElement("h3");
+      h3.className = "blog-title";
+      const a = document.createElement("a");
+      a.href = p.link;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = p.title;
+      h3.appendChild(a);
+
+      const meta = document.createElement("div");
+      meta.className = "blog-meta";
+      const d = p.pubDate ? new Date(p.pubDate) : null;
+      meta.textContent = d ? d.toLocaleDateString() : "";
+
+      wrap.appendChild(h3);
+      wrap.appendChild(meta);
+      card.appendChild(wrap);
+      blogGrid.appendChild(card);
+    });
+  };
+
+  const loadMediumBlogs = async () => {
+    try {
+      const items = await fetchRss2Json();
+      renderPosts(items);
+    } catch (e1) {
+      try {
+        const items = await fetchAllOriginsXML();
+        renderPosts(items);
+      } catch (e2) {
+        const blogGrid = document.getElementById("blog-grid");
+        if (blogGrid) {
+          blogGrid.innerHTML = `<div class="card">Failed to load blogs. Please check your handle or try again later.</div>`;
+        }
+      }
+    }
+  };
 
   const personalInfo = {
     name: "Aadil Sayyed",
@@ -58,16 +153,22 @@ const Portfolio3 = () => {
 
   const experiences = [
     {
+      company: "KeyBrainsTech",
+      role: "Senior Software Developer",
+      period: "Mar 2025 - Present",
+      description: "Worked on mobile application which helps companies to manage contracts, invoices, customers, labours and payment. Worked with different payment gateways like NMI, Dejavoo, etc. Developed important features like tap and pay feature, payment using google pay and apple pay.",
+    },
+    {
       company: "Metadesign Software Services",
       role: "Software Engineer",
-      period: "July 2021 - Present",
-      description: "Worked on a range of payment solutions utilized by merchants, aiming to improve the efficiency and reliability of their transaction systems. Architected React Native payments core (NMI, GPay, Apple Pay) and scaled Node services to 1.5M MAU with zero-downtime deploys."
+      period: "July 2021 - Dec 2024",
+      description: "Worked on a range of payment solutions utilized by merchants, aiming to improve the efficiency and reliability of their transaction systems. Collaborated with teams to develop innovative features and resolve issues to ensure smooth operation and user satisfaction."
     },
     {
       company: "Metadesign Software Services",
       role: "Software Engineer Intern",
       period: "January 2021 - June 2021",
-      description: "Developed a platform application to display live transaction data summaries to merchants in various formats and collaborated with the team to resolve issues in other projects. Built offline-first React Native app with geofencing capabilities."
+      description: "Developed a platform application to display live transaction data summaries to merchants in various formats and collaborated with the team to resolve issues in other projects."
     }
   ];
 
@@ -488,6 +589,92 @@ const Portfolio3 = () => {
           line-height: 1.5;
         }
 
+        /* Blog cards */
+        .blog-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 18px;
+        }
+
+        .blog-card {
+          display: flex;
+          gap: 14px;
+          align-items: center;
+          padding: 12px;
+          background: linear-gradient(135deg, #fff69b, #ffeb3b);
+          border: var(--border) solid var(--ink);
+          border-radius: var(--radius);
+          box-shadow: var(--shadow);
+          transition: transform .15s, background .2s;
+        }
+
+        .blog-card:nth-child(1) { 
+          background: linear-gradient(135deg, #ffbcbc, #ff8a80);
+        }
+        .blog-card:nth-child(2) { 
+          background: linear-gradient(135deg, #bfffcf, #81c784);
+        }
+        .blog-card:nth-child(3) { 
+          background: linear-gradient(135deg, #bfeaff, #64b5f6);
+        }
+        .blog-card:nth-child(4) { 
+          background: linear-gradient(135deg, #ffc39b, #ffab40);
+        }
+        .blog-card:nth-child(5) { 
+          background: linear-gradient(135deg, #d9c4ff, #ba68c8);
+        }
+        .blog-card:nth-child(6) { 
+          background: linear-gradient(135deg, #b8ffbc, #66bb6a);
+        }
+
+        .blog-card:hover {
+          transform: translateY(-4px);
+          background: linear-gradient(135deg, #fff9c4, #ffecb3);
+        }
+
+        .thumb {
+          width: 120px;
+          height: 86px;
+          flex: 0 0 120px;
+          object-fit: cover;
+          border-radius: 12px;
+          border: 2px solid var(--ink);
+        }
+
+        .blog-meta {
+          font-size: 14px;
+          color: var(--ink-2);
+          margin-top: 4px;
+        }
+
+        .blog-title {
+          font-size: 18px;
+          line-height: 1.2;
+          margin-bottom: 4px;
+        }
+
+        .blog-title a {
+          color: var(--ink);
+          text-decoration: none;
+        }
+
+        .blog-title a:hover {
+          text-decoration: underline;
+        }
+
+        @media (max-width: 520px) {
+          .blog-card {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .thumb {
+            width: 100%;
+            height: 160px;
+            flex: none;
+          }
+        }
+
         /* Contact */
         .contact-grid {
           display: grid;
@@ -573,6 +760,7 @@ const Portfolio3 = () => {
             <button className="nav-link" onClick={() => scrollToSection('experience')}>Experience</button>
             <button className="nav-link" onClick={() => scrollToSection('skills')}>Skills</button>
             <button className="nav-link" onClick={() => scrollToSection('education')}>Education</button>
+            <button className="nav-link" onClick={() => scrollToSection('blogs')}>Blogs</button>
             <button className="nav-link" onClick={() => scrollToSection('contact')}>Contact</button>
           </nav>
         </div>
@@ -600,6 +788,24 @@ const Portfolio3 = () => {
             I'm a software engineer with 5+ years of experience shipping mobile & web products.
             I care about clean APIs, smooth UX, and reliable systems. Recently: payments flows with NMI + GPay/Apple Pay and agri-tech tooling.
           </p>
+        </div>
+      </section>
+      
+      {/* Experience */}
+      <section id="experience" className="section">
+        <div className="container">
+          <div className="text-center mb-3">
+            <h2 className="section-head">Experience</h2>
+          </div>
+          <div className="grid auto">
+            {experiences.map((exp, index) => (
+              <article key={index} className="experience-card">
+                <h3 className="experience-title">{exp.role} — {exp.company}</h3>
+                <p className="experience-period">{exp.period}</p>
+                <p className="experience-desc">{exp.description}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -650,24 +856,6 @@ const Portfolio3 = () => {
         </div>
       </section>
 
-      {/* Experience */}
-      <section id="experience" className="section">
-        <div className="container">
-          <div className="text-center mb-3">
-            <h2 className="section-head">Experience</h2>
-          </div>
-          <div className="grid auto">
-            {experiences.map((exp, index) => (
-              <article key={index} className="experience-card">
-                <h3 className="experience-title">{exp.role} — {exp.company}</h3>
-                <p className="experience-period">{exp.period}</p>
-                <p className="experience-desc">{exp.description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Skills */}
       <section id="skills" className="section">
         <div className="container">
@@ -695,6 +883,18 @@ const Portfolio3 = () => {
               <h3 className="mb-1">B.E. Computer Science</h3>
               <p className="mb-0">Savitribai Phule Pune University (2016—2020)</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Blogs */}
+      <section id="blogs" className="section">
+        <div className="container">
+          <div className="text-center mb-3">
+            <h2 className="section-head">Latest Blogs</h2>
+          </div>
+          <div id="blog-grid" className="blog-grid">
+            <div className="card">Loading your Medium posts…</div>
           </div>
         </div>
       </section>
