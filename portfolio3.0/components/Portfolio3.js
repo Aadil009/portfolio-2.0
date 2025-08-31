@@ -756,8 +756,8 @@ const Portfolio3 = () => {
           </button>
           <nav className={`links ${isMenuOpen ? 'open' : ''}`}>
             <button className="nav-link" onClick={() => scrollToSection('about')}>About</button>
-            <button className="nav-link" onClick={() => scrollToSection('projects')}>Projects</button>
             <button className="nav-link" onClick={() => scrollToSection('experience')}>Experience</button>
+            <button className="nav-link" onClick={() => scrollToSection('projects')}>Projects</button>
             <button className="nav-link" onClick={() => scrollToSection('skills')}>Skills</button>
             <button className="nav-link" onClick={() => scrollToSection('education')}>Education</button>
             <button className="nav-link" onClick={() => scrollToSection('blogs')}>Blogs</button>
@@ -790,7 +790,7 @@ const Portfolio3 = () => {
           </p>
         </div>
       </section>
-      
+
       {/* Experience */}
       <section id="experience" className="section">
         <div className="container">
@@ -880,8 +880,12 @@ const Portfolio3 = () => {
           </div>
           <div className="grid auto">
             <div className="card">
-              <h3 className="mb-1">B.E. Computer Science</h3>
-              <p className="mb-0">Savitribai Phule Pune University (2016—2020)</p>
+              <h3 className="mb-1">M.Sc. Scientific Computing</h3>
+              <p className="mb-0">Pune University (2019—2021)</p>
+            </div>
+            <div className="card">
+              <h3 className="mb-1">B.Sc. Computer Science</h3>
+              <p className="mb-0">PVP College Loni (2015—2018)</p>
             </div>
           </div>
         </div>
